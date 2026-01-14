@@ -2,11 +2,20 @@
   RewriteEngine On
   RewriteBase /
 
+  # Servir les assets depuis dist/ si le fichier existe
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f [OR]
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
+  RewriteRule ^(.+)$ dist/$1 [L]
+
   # Fallback SPA vers dist/index.html
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ dist/index.html [L]
 </IfModule>
+
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>
+
+DirectoryIndex dist/index.html
 
 <IfModule mod_mime.c>
   AddType application/javascript .js .mjs
