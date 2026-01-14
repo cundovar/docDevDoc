@@ -29,10 +29,15 @@ function parseInline(text: string): ReactNode[] {
   const nodes: ReactNode[] = []
   let remaining = text
 
-  const patterns = [
+  type InlinePattern = {
+    regex: RegExp
+    render: (match: RegExpExecArray) => ReactNode
+  }
+
+  const patterns: InlinePattern[] = [
     {
       regex: /\[([^\]]+)\]\(([^)]+)\)/,
-      render: (match: RegExpMatchArray) => (
+      render: (match) => (
         <a
           href={match[2]}
           className="text-[var(--doc-accent-strong)] underline-offset-4 hover:underline"
@@ -45,7 +50,7 @@ function parseInline(text: string): ReactNode[] {
     },
     {
       regex: /`([^`]+)`/,
-      render: (match: RegExpMatchArray) => (
+      render: (match) => (
         <code className="rounded bg-[var(--doc-surface-muted)] px-1.5 py-0.5 text-sm">
           {match[1]}
         </code>
@@ -53,45 +58,42 @@ function parseInline(text: string): ReactNode[] {
     },
     {
       regex: /\*\*([^*]+)\*\*/,
-      render: (match: RegExpMatchArray) => <strong>{match[1]}</strong>,
+      render: (match) => <strong>{match[1]}</strong>,
     },
     {
       regex: /\*([^*]+)\*/,
-      render: (match: RegExpMatchArray) => <em>{match[1]}</em>,
+      render: (match) => <em>{match[1]}</em>,
     },
   ]
 
   while (remaining.length > 0) {
-    let nextMatch: RegExpMatchArray | null = null
-    let nextPattern:
-      | {
-          regex: RegExp
-          render: (match: RegExpMatchArray) => ReactNode
-        }
-      | undefined
+    let nextMatch: RegExpExecArray | null = null
+    let nextPattern: InlinePattern | null = null
+    let nextIndex = -1
 
-    patterns.forEach((pattern) => {
-      const match = remaining.match(pattern.regex)
+    for (const pattern of patterns) {
+      const match = pattern.regex.exec(remaining)
       if (!match) {
-        return
+        continue
       }
-      if (!nextMatch || match.index! < nextMatch.index!) {
+      if (nextMatch === null || match.index < nextIndex) {
         nextMatch = match
         nextPattern = pattern
+        nextIndex = match.index
       }
-    })
+    }
 
-    if (!nextMatch || !nextPattern || nextMatch.index === undefined) {
+    if (!nextMatch || !nextPattern) {
       nodes.push(remaining)
       break
     }
 
-    if (nextMatch.index > 0) {
-      nodes.push(remaining.slice(0, nextMatch.index))
+    if (nextIndex > 0) {
+      nodes.push(remaining.slice(0, nextIndex))
     }
 
     nodes.push(nextPattern.render(nextMatch))
-    remaining = remaining.slice(nextMatch.index + nextMatch[0].length)
+    remaining = remaining.slice(nextIndex + nextMatch[0].length)
   }
 
   return nodes
@@ -201,7 +203,13 @@ export function renderMarkdown(content: string) {
     switch (block.type) {
       case 'heading': {
         const id = slugify(block.text)
-        const HeadingTag = `h${block.depth}` as const
+        const HeadingTag = `h${block.depth}` as
+          | 'h1'
+          | 'h2'
+          | 'h3'
+          | 'h4'
+          | 'h5'
+          | 'h6'
         const className =
           block.depth === 1
             ? 'text-3xl font-semibold tracking-tight'
@@ -289,7 +297,7 @@ export function renderMarkdown(content: string) {
       case 'rule':
         return <hr key={`${block.type}-${idx}`} className="border-[var(--doc-line)]" />
       default:
-        return <Fragment key={`${block.type}-${idx}`} />
+        return <Fragment key={`block-${idx}`} />
     }
   })
 }
