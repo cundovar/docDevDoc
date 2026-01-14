@@ -23,7 +23,10 @@ const categoryMap: Record<string, string> = {
 const fallbackCategory = 'Autres'
 
 function normalizePath(path: string) {
-  return path.replace(/^\/documentations\//, '').replace(/\.md$/, '')
+  return path
+    .replace(/^\/documentation\//, '')
+    .replace(/^\/documentations\//, '')
+    .replace(/\.md$/, '')
 }
 
 function slugFromPath(path: string) {
