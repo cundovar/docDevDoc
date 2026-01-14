@@ -2,6 +2,9 @@
   RewriteEngine On
   RewriteBase /
 
+  # Assets Vite (serve /assets/... depuis dist/assets)
+  RewriteRule ^assets/(.*)$ dist/assets/$1 [L]
+
   # Servir les assets depuis dist/ si le fichier existe
   RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f [OR]
   RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
