@@ -2,15 +2,18 @@
   RewriteEngine On
   RewriteBase /
 
-  # Assets Vite (serve /assets/... depuis dist/assets)
-  RewriteRule ^assets/(.*)$ dist/assets/$1 [L]
+  # Si le fichier existe dans dist/, le servir directement
+  RewriteCond %{REQUEST_URI} ^/assets/
+  RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -f
+  RewriteRule ^(.*)$ dist/$1 [L]
 
-  # Servir les assets depuis dist/ si le fichier existe
-  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f [OR]
-  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
-  RewriteRule ^(.+)$ dist/$1 [L]
+  # Servir vite.svg et autres fichiers statiques depuis dist/
+  RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -f
+  RewriteRule ^(.*)$ dist/$1 [L]
 
-  # Fallback SPA vers dist/index.html
+  # Fallback SPA vers dist/index.html (uniquement si pas un fichier)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ dist/index.html [L]
 </IfModule>
 
