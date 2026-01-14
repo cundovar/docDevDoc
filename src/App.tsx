@@ -1,13 +1,8 @@
 
-import './App.css'
+import { DocLayout } from './features/docs/components/DocLayout/DocLayout'
 
 function App() {
-
-  return (
-    <>
-    
-    </>
-  )
+  return <DocLayout />
 }
 
 export default App
