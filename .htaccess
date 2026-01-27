@@ -2,10 +2,31 @@
   RewriteEngine On
   RewriteBase /
 
-  RewriteRule ^dist/ - [L]
-  RewriteRule ^dist$ dist/ [L]
+  # Si le fichier existe dans dist/, le servir directement
+  RewriteCond %{REQUEST_URI} ^/assets/
+  RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -f
+  RewriteRule ^(.*)$ dist/$1 [L]
 
+  # Servir vite.svg et autres fichiers statiques depuis dist/
+  RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -f
+  RewriteRule ^(.*)$ dist/$1 [L]
+
+  # Fallback SPA vers dist/index.html (uniquement si pas un fichier)
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^(.*)$ dist/$1 [L]
+  RewriteRule ^ dist/index.html [L]
+</IfModule>
+
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>
+
+DirectoryIndex dist/index.html
+
+<IfModule mod_mime.c>
+  AddType application/javascript .js .mjs
+  AddType text/css .css
+  AddType application/json .json
+  AddType image/svg+xml .svg
+  AddType font/woff2 .woff2
 </IfModule>
